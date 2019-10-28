@@ -4,13 +4,52 @@ import express from 'express';
 import { StaticRouter } from 'react-router-dom';
 import App from './App';
 import path from 'path';
+import fs from 'fs';
+
+// look up the paths in asset-manifest.json
+const manifest = JSON.parse(
+    fs.readFileSync(path.resolve('./build/asset-manifest.json'), `utf-8`)
+);
+
+const chunks = Object.keys(manifest.files)
+    .filter(key => /chunk\.js$/.exec(key)) // find a key ending with 'chunk.js'
+    .map(key => `<script src="${manifest.files[key]}"></script>`) // switch to script tag
+    // .join(''); // then join them
+
+
+function createPage(root) {
+    return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,shrink-to-fit=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <title>React App</title>
+    <link href="${manifest.files['main.css']}" rel="stylesheet" />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root">
+      ${root}
+    </div>
+    <script src="${manifest.files['runtime-main.js']}"></script>
+    ${chunks}
+    <script src="${manifest.files['main.js']}"></script>
+  </body>
+  </html>
+    `;
+}
+
 
 const app = express();
 
 // handler function to take care of SSR
-cost serverRender = (req, res, next) => {
+const serverRender = (req, res, next) => {
     // at 404 error, SSR
-
     const context = {};
     const jsx = (
         <StaticRouter location={req.url} context={context}>
@@ -18,14 +57,14 @@ cost serverRender = (req, res, next) => {
         </StaticRouter>
     );
     const root = ReactDOMServer.renderToString(jsx);
-    res.send(root); // send the response to a client.
+    res.send(createPage(root)); // send the response to a client.
 };
 
 const serve = express.static(path.resolve('./build'), {
-    index: false // not shoing index.html in "/" path.
+    index: false // not showing index.html in "/" path.
 });
 
-app.use(serve);
+app.use(serve); // this should come earlier than serverRender
 app.use(serverRender);
 
 app.listen(5000, () => {
