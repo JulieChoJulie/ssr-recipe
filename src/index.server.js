@@ -5,6 +5,11 @@ import { StaticRouter } from 'react-router-dom';
 import App from './App';
 import path from 'path';
 import fs from 'fs';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+import rootReducer from './modules';
+import PreloadContext from './lib/PreloadContext';
 
 // look up the paths in asset-manifest.json
 const manifest = JSON.parse(
@@ -51,12 +56,42 @@ const app = express();
 const serverRender = (req, res, next) => {
     // at 404 error, SSR
     const context = {};
+    const store = createStore(rootReducer, applyMiddleware(thunk));
+
+    const preloadContext = {
+        done: false,
+        promises: [],
+    };
+
     const jsx = (
-        <StaticRouter location={req.url} context={context}>
-            <App />
-        </StaticRouter>
+        <PreloadContext.Provider value={preloadContext}>
+            <Provider store={store}>
+                <StaticRouter location={req.url} context={context}>
+                    <App />
+                </StaticRouter>
+            </Provider>
+        </PreloadContext.Provider>
     );
-    const root = ReactDOMServer.renderToString(jsx);
+
+    /*
+    Create new store every time receiving a request.
+    rendering => collecting all promises => waiting till promise => re-rendering with data.
+     */
+
+    // rendering with renderToStaticMarkup to build static page
+    // purpose: to call the function in preloader
+    //          && faster than renderToStrings
+    
+    ReactDOMServer.renderToStaticMarkup(jsx);
+
+    try {
+        await Promise.all(preloadContext.promises); // wait for all promises
+    } catch (e) {
+        return res.status(500);
+    }
+    preloadContext.done = true;
+
+    const root = ReactDOMServer.renderToString(jsx); //rendering
     res.send(createPage(root)); // send the response to a client.
 };
 
