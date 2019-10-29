@@ -45,7 +45,7 @@ function users(state=initialState, action) {
         case GET_USERS_SUCCESS:
             return {...state, users: action.payload, loading: {...state.loading, users: false}};
         case GET_USERS_FAILURE:
-            return {...state, error: {...state.error, users: action,payload}, loading: {...state.loading, users: false}};
+            return {...state, error: {...state.error, users: action.payload}, loading: {...state.loading, users: false}};
         default:
             return state;
     }
