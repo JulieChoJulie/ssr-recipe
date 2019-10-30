@@ -43,7 +43,7 @@ function users(state=initialState, action) {
         case GET_USERS_PENDING:
             return {...state, loading: {...state.loading, users: true}};
         case GET_USERS_SUCCESS:
-            return {...state, users: action.payload, loading: {...state.loading, users: false}};
+            return {...state, users: action.payload.data, loading: {...state.loading, users: false}};
         case GET_USERS_FAILURE:
             return {...state, error: {...state.error, users: action.payload}, loading: {...state.loading, users: false}};
         default:

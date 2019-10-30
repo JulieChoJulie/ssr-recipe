@@ -53,7 +53,7 @@ function createPage(root) {
 const app = express();
 
 // handler function to take care of SSR
-const serverRender = (req, res, next) => {
+const serverRender = async (req, res, next) => {
     // at 404 error, SSR
     const context = {};
     const store = createStore(rootReducer, applyMiddleware(thunk));
@@ -81,7 +81,7 @@ const serverRender = (req, res, next) => {
     // rendering with renderToStaticMarkup to build static page
     // purpose: to call the function in preloader
     //          && faster than renderToStrings
-    
+
     ReactDOMServer.renderToStaticMarkup(jsx);
 
     try {
@@ -92,6 +92,7 @@ const serverRender = (req, res, next) => {
     preloadContext.done = true;
 
     const root = ReactDOMServer.renderToString(jsx); //rendering
+    // change JSON to string and
     res.send(createPage(root)); // send the response to a client.
 };
 
