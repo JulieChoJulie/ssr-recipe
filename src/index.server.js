@@ -22,7 +22,7 @@ const chunks = Object.keys(manifest.files)
     // .join(''); // then join them
 
 
-function createPage(root) {
+function createPage(root, stateScript) {
     return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -41,6 +41,7 @@ function createPage(root) {
     <div id="root">
       ${root}
     </div>
+    ${stateScript}
     <script src="${manifest.files['runtime-main.js']}"></script>
     ${chunks}
     <script src="${manifest.files['main.js']}"></script>
@@ -92,8 +93,13 @@ const serverRender = async (req, res, next) => {
     preloadContext.done = true;
 
     const root = ReactDOMServer.renderToString(jsx); //rendering
-    // change JSON to string and
-    res.send(createPage(root)); // send the response to a client.
+
+    // to re-use store (created in ssr) in browser, change store->string->script
+    // change JSON to string and replace < to prevent executing script based malware
+    const stateString = JSON.stringify(store.getState()).replace(/</g, '\\u003c');
+    const stateScript = `<script>__PRELOADED_STATE__ = ${stateString}</script>`; // insert redux initial state as script
+
+    res.send(createPage(root, stateScript)); // send the response to a client.
 };
 
 const serve = express.static(path.resolve('./build'), {

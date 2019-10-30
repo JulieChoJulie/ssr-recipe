@@ -9,7 +9,10 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter } from 'react-router-dom';
 
-const store = createStore(rootReducer, applyMiddleware(thunk));
+const store = createStore(
+    rootReducer,
+    window.__PRELOADED_STATE__, // use this state as initialState
+    applyMiddleware(thunk));
 
 ReactDOM.render(
     <Provider store={store}>
