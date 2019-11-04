@@ -18,7 +18,7 @@ const GET_USER_SUCCESS = 'users/GET_USER_SUCCESS';
 const GET_USER_FAILURE = 'users/GET_USER_FAILURE';
 
 export const getUser = id => ({ type: GET_USER, payload: id });
-const getUserSuccess = data => ({ type: GET_USER, payload: data });
+const getUserSuccess = data => ({ type: GET_USER_SUCCESS, payload: data });
 const getUserFailure = error => ({ type: GET_USER_FAILURE, payload: error, error: true})
 
 export const getUsers = () => async dispatch => {
@@ -46,8 +46,8 @@ function* getUserSaga(action) {
     }
 };
 
-export function* userSaga() {
-    yield takeEver(GET_USER, getUserSaga);
+export function* usersSaga() {
+    yield takeEvery(GET_USER, getUserSaga);
 }
 
 const initialState = {
@@ -86,7 +86,7 @@ function users(state=initialState, action) {
         case GET_USER_SUCCESS:
             return {
                 ...state,
-                user: action,payload,
+                user: action.payload,
                 loading: {
                     ...state.loading,
                     user: false,
