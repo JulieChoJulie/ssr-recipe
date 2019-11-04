@@ -15,7 +15,7 @@ const UserContainer = ({ id }) => {
     }, [dispatch, id, user]);
 
     if (!user) {
-        return <Preloader resolve={() => dispatch(id)} />;
+        return <Preloader resolve={() => dispatch(getUser(id))} />;
     }
 
     return <User user={user} />;
